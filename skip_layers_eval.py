@@ -16,12 +16,20 @@ def main(cfg: DictConfig):
     if check_existing_run(cfg.experiment.entity, cfg.experiment.project, cfg, irrelevant_keys=irrelevant_keys):
         print("An experiment with this configuration has already been run.")
         return  # Exit or proceed based on your preference
-
+    
+    wandb.config = OmegaConf.to_container(
+        cfg, resolve=True, throw_on_missing=True
+    )
+    wandb.init(
+        name=f"{cfg.experiment.name}_model={cfg.model.name}_skip_layer={cfg.model.skip_layer}",
+        entity=cfg.wandb.entity, 
+        project=cfg.wandb.project, 
+        config=filter_config(cfg, irrelevant_keys)
+    )
+    
     # Initialize wandb logger
     wandb_logger = WandbLogger(
-        name=f"{cfg.experiment.name}_model={cfg.model.name}_skip_layer={cfg.model.skip_layer}",
         project=cfg.experiment.project,
-        config=filter_config(cfg, irrelevant_keys),
         reinit=True
     ) if cfg.trainer.logger else None
 
