@@ -34,14 +34,14 @@ class GPT2LightningModule(pl.LightningModule):
         self.nlls = []
 
 
-    def modify_model(self, layer_to_skip):
+    def modify_model(self, layers_to_skip):
         # Modify the model to skip a specific layer
         import copy
-        if not isinstance(layers_to_remove, list):
-            layers_to_remove = [layers_to_remove]
+        if not isinstance(layers_to_skip, list):
+            layers_to_skip = [layers_to_skip]
         modified_model = copy.deepcopy(self.model)
         modified_model.transformer.h = nn.ModuleList(
-            [layer for i, layer in enumerate(modified_model.transformer.h) if i not in layers_to_remove]
+            [layer for i, layer in enumerate(modified_model.transformer.h) if i not in layers_to_skip]
         )
 
         self.model = modified_model
