@@ -1,13 +1,8 @@
-import math
-import torch
 from torch.utils.data import DataLoader
-from transformers import AutoModelForCausalLM, AutoTokenizer
 from datasets import load_dataset
 import pytorch_lightning as pl
 from pytorch_lightning import Trainer
-from pytorch_lightning.utilities.types import STEP_OUTPUT
 from transformers import DataCollatorWithPadding
-
 
 
 class WikiTextDataModule(pl.LightningDataModule):
@@ -22,9 +17,10 @@ class WikiTextDataModule(pl.LightningDataModule):
         load_dataset('wikitext', 'wikitext-2-raw-v1')
 
     def setup(self, stage=None):
-        # Load and tokenize dataset
+        # Load dataset
         dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='test')
 
+        # Tokenize dataset
         def tokenize_function(examples):
             return self.tokenizer(
                 examples['text'],
@@ -33,14 +29,22 @@ class WikiTextDataModule(pl.LightningDataModule):
                 return_attention_mask=True,
             )
 
-        self.test_dataset = dataset.map(
+        tokenized_dataset = dataset.map(
             tokenize_function,
             batched=True,
             remove_columns=['text'],
         )
 
+        # Filter out sequences with length less than 1
+        def filter_empty(example):
+            return len(example['input_ids']) > 0
+
+        tokenized_dataset = tokenized_dataset.filter(filter_empty)
+
         # Set dataset format to PyTorch tensors
-        self.test_dataset.set_format(type='torch')
+        tokenized_dataset.set_format(type='torch')
+
+        self.test_dataset = tokenized_dataset
 
     def test_dataloader(self):
         return DataLoader(
