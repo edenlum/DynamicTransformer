@@ -7,7 +7,7 @@ experiment:
   project: 'skip_layer_gpt2_wikitext'
 
 model:
-  name: 'gpt2','openai-community/gpt2-large'
+  name: ['gpt2','openai-community/gpt2-large']
   skip_layer: range(0, 12)
 
 data:
