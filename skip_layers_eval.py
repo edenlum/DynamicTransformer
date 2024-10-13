@@ -12,7 +12,8 @@ from utils import *
 def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
-    if check_existing_run(cfg.experiment.entity, cfg.experiment.project, cfg, irrelevant_keys=['hydra', 'experiment', 'trainer']):
+    irrelevant_keys = ['hydra', 'experiment', 'trainer']
+    if check_existing_run(cfg.experiment.entity, cfg.experiment.project, cfg, irrelevant_keys=irrelevant_keys):
         print("An experiment with this configuration has already been run.")
         return  # Exit or proceed based on your preference
 
@@ -20,7 +21,7 @@ def main(cfg: DictConfig):
     wandb_logger = WandbLogger(
         name=cfg.experiment.name,
         project=cfg.experiment.project,
-        config=cfg
+        config=filter_config(cfg, irrelevant_keys)
     ) if cfg.trainer.logger else None
 
     # Initialize trainer
