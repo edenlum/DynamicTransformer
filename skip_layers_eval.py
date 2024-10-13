@@ -12,7 +12,7 @@ from utils import *
 def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
-    if check_existing_run(cfg.experiment.entity, cfg.experiment.project, cfg):
+    if check_existing_run(cfg.experiment.entity, cfg.experiment.project, cfg, irrelevant_keys=['hydra', 'experiment', 'trainer']):
         print("An experiment with this configuration has already been run.")
         return  # Exit or proceed based on your preference
 
