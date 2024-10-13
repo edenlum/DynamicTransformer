@@ -16,10 +16,16 @@ class GPT2LightningModule(pl.LightningModule):
         self.model_name = self.hparams.model_name
         self.skip_layer = self.hparams.skip_layer
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(self.model_name)
+
+        # Set pad token to eos token if not set
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+
+        self.model = AutoModelForCausalLM.from_pretrained(self.model_name, pad_token_id=self.tokenizer.eos_token_id)
 
         if self.skip_layer is not None:
             self.modify_model(self.skip_layer)
+
 
     def modify_model(self, layer_to_skip):
         # Modify the model to skip a specific layer
@@ -50,16 +56,26 @@ class GPT2LightningModule(pl.LightningModule):
         self.model.transformer.forward = types.MethodType(custom_forward, self.model.transformer)
 
     def test_step(self, batch, batch_idx):
-        input_ids = batch['input_ids'].to(self.device)
-        attention_mask = batch.get('attention_mask', None)
-        if attention_mask is not None:
-            attention_mask = attention_mask.to(self.device)
+        input_ids = batch['input_ids']
+        attention_mask = batch['attention_mask']
         labels = input_ids.clone()
 
-        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+        outputs = self.model(
+            input_ids=input_ids, 
+            attention_mask=attention_mask, 
+            labels=labels
+        )
         loss = outputs.loss
-        self.log('test_loss', loss, prog_bar=True, on_step=False, on_epoch=True, sync_dist=True)
+        self.log(
+            'test_loss', 
+            loss, 
+            prog_bar=True, 
+            on_step=False, 
+            on_epoch=True, 
+            sync_dist=True
+        )
         return loss
+
 
     def on_test_epoch_end(self):
         avg_loss = self.trainer.callback_metrics['test_loss']
