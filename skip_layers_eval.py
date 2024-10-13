@@ -6,7 +6,7 @@ from transformers import AutoTokenizer
 from data_module import WikiTextDataModule
 from model import GPT2LightningModule
 
-@hydra.main(config_path='configs', config_name='config')
+@hydra.main(config_path='configs', config_name='skip_layer')
 def main(cfg: DictConfig):
     # Update experiment name based on skip_layer
     cfg.experiment.name = f'skip_layer_{cfg.model.skip_layer}'
