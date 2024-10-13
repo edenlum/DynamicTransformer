@@ -21,10 +21,14 @@ class GPT2LightningModule(pl.LightningModule):
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
-        self.model = AutoModelForCausalLM.from_pretrained(self.model_name, pad_token_id=self.tokenizer.eos_token_id)
+        self.model = AutoModelForCausalLM.from_pretrained(
+            self.model_name,
+            pad_token_id=self.tokenizer.eos_token_id
+        )
 
         if self.skip_layer is not None:
             self.modify_model(self.skip_layer)
+
 
 
     def modify_model(self, layer_to_skip):
