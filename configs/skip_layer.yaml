@@ -1,0 +1,20 @@
+defaults:
+  - _self_
+
+experiment:
+  name: 'skip_layer'
+  project: 'skip_layer_gpt2_wikitext'
+
+model:
+  name: 'gpt2'
+  skip_layer: null  # Set to an integer to skip a specific layer
+
+data:
+  batch_size: 1
+  max_length: 1024
+
+trainer:
+  gpus: 1
+  max_epochs: 1
+  logger: true
+  enable_checkpointing: false
