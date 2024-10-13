@@ -13,13 +13,11 @@ class GPT2LightningModule(pl.LightningModule):
     def __init__(self, model_name='gpt2', skip_layer=None):
         super().__init__()
         self.save_hyperparameters()
-        self.model_name = self.hparams.model_name
-        self.skip_layer = self.hparams.skip_layer
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        self.model_name = model_name
+        self.skip_layer = skip_layer
 
-        # Set pad token to eos token if not set
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        self.tokenizer.pad_token = self.tokenizer.eos_token
 
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
@@ -29,6 +27,7 @@ class GPT2LightningModule(pl.LightningModule):
         if self.skip_layer is not None:
             self.modify_model(self.skip_layer)
 
+        self.nlls = []
 
 
     def modify_model(self, layer_to_skip):
@@ -60,32 +59,29 @@ class GPT2LightningModule(pl.LightningModule):
         self.model.transformer.forward = types.MethodType(custom_forward, self.model.transformer)
 
     def test_step(self, batch, batch_idx):
-        input_ids = batch['input_ids']
-        attention_mask = batch['attention_mask']
-        labels = input_ids.clone()
+        input_ids = batch['input_ids'].squeeze(0).to(self.device)
+        begin_loc = batch['begin_loc'].item()
+        end_loc = batch['end_loc'].item()
+        trg_len = batch['trg_len'].item()
 
-        outputs = self.model(
-            input_ids=input_ids, 
-            attention_mask=attention_mask, 
-            labels=labels
-        )
-        loss = outputs.loss
-        self.log(
-            'test_loss', 
-            loss, 
-            prog_bar=True, 
-            on_step=False, 
-            on_epoch=True, 
-            sync_dist=True
-        )
-        return loss
+        # Prepare target_ids
+        target_ids = input_ids.clone()
+        target_ids[:-trg_len] = -100  # Only compute loss on new tokens
 
+        outputs = self.model(input_ids=input_ids, labels=target_ids)
+        neg_log_likelihood = outputs.loss * trg_len
+
+        self.nlls.append(neg_log_likelihood)
+
+        return neg_log_likelihood
 
     def on_test_epoch_end(self):
-        avg_loss = self.trainer.callback_metrics['test_loss']
-        perplexity = torch.exp(avg_loss)
-        self.log('test_perplexity', perplexity, prog_bar=True)
-        print(f'Test Perplexity: {perplexity.item():.2f}')
+        # Access test_dataset_size from the data module
+        test_dataset_size = self.trainer.datamodule.test_dataset_size
+        nlls = torch.stack(self.nlls)
+        ppl = torch.exp(nlls.sum() / test_dataset_size)
+        self.log('test_perplexity', ppl)
+        print(f'Test Perplexity: {ppl.item():.2f}')
 
     def configure_optimizers(self):
         # Not needed since we're only evaluating

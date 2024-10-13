@@ -10,11 +10,16 @@ model:
   skip_layer: null  # Set to an integer to skip a specific layer
 
 data:
-  batch_size: 1
-  max_length: 1024
+  block_size: 1024  # Model's max context length
+  stride: 512       # Overlap between chunks
 
 trainer:
   gpus: 1
-  max_epochs: 1
   logger: true
   enable_checkpointing: false
+
+
+hydra:
+  job:
+    env_set:
+      TOKENIZERS_PARALLELISM: 'false'

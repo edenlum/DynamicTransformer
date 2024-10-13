@@ -1,55 +1,56 @@
-from torch.utils.data import DataLoader
-from datasets import load_dataset
-import pytorch_lightning as pl
-from pytorch_lightning import Trainer
-from transformers import DataCollatorWithPadding
+# data_module.py
 
+import pytorch_lightning as pl
+from datasets import load_dataset
+from torch.utils.data import Dataset, DataLoader
+from transformers import AutoTokenizer
+
+class TextDataset(Dataset):
+    def __init__(self, encodings, block_size):
+        self.input_ids = encodings.input_ids[0]
+        self.block_size = block_size
+
+    def __len__(self):
+        return (len(self.input_ids) - 1) // self.block_size + 1
+
+    def __getitem__(self, idx):
+        begin_loc = idx * self.block_size
+        end_loc = min(begin_loc + self.block_size, len(self.input_ids))
+        input_ids = self.input_ids[begin_loc:end_loc]
+        return {
+            'input_ids': input_ids,
+            'begin_loc': begin_loc,
+            'end_loc': end_loc,
+            'trg_len': end_loc - begin_loc,
+        }
 
 class WikiTextDataModule(pl.LightningDataModule):
-    def __init__(self, tokenizer, batch_size=1, max_length=1024):
+    def __init__(self, tokenizer_name, block_size=1024, stride=512):
         super().__init__()
-        self.tokenizer = tokenizer
-        self.batch_size = batch_size
-        self.max_length = max_length
+        self.tokenizer_name = tokenizer_name
+        self.block_size = block_size
+        self.stride = stride
 
     def prepare_data(self):
-        # Download data if needed
         load_dataset('wikitext', 'wikitext-2-raw-v1')
 
     def setup(self, stage=None):
-        # Load dataset
-        dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='test')
+        tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_name)
+        tokenizer.pad_token = tokenizer.eos_token
 
-        # Tokenize dataset
-        def tokenize_function(examples):
-            return self.tokenizer(
-                examples['text'],
-                truncation=True,
-                max_length=self.max_length,
-                return_attention_mask=True,
-            )
+        test_dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='test')
 
-        tokenized_dataset = dataset.map(
-            tokenize_function,
-            batched=True,
-            remove_columns=['text'],
-        )
+        # Concatenate all test texts
+        test_text = "\n\n".join(test_dataset['text'])
 
-        # Filter out sequences with length less than 1
-        def filter_empty(example):
-            return len(example['input_ids']) > 0
+        # Tokenize the concatenated text
+        encodings = tokenizer(test_text, return_tensors='pt')
 
-        tokenized_dataset = tokenized_dataset.filter(filter_empty)
+        # Create the custom dataset
+        self.test_dataset = TextDataset(encodings, block_size=self.stride)
 
-        # Set dataset format to PyTorch tensors
-        tokenized_dataset.set_format(type='torch')
-
-        self.test_dataset = tokenized_dataset
+        # Store the total number of tokens
+        self.test_dataset_size = len(self.test_dataset.input_ids)
 
     def test_dataloader(self):
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            collate_fn=DataCollatorWithPadding(tokenizer=self.tokenizer, padding='longest'),
-            num_workers=96
-        )
+        return DataLoader(self.test_dataset, batch_size=1, num_workers=96)
