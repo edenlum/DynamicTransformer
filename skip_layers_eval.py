@@ -19,7 +19,8 @@ def main(cfg: DictConfig):
     # Initialize wandb logger
     wandb_logger = WandbLogger(
         name=cfg.experiment.name,
-        project=cfg.experiment.project
+        project=cfg.experiment.project,
+        config=cfg
     ) if cfg.trainer.logger else None
 
     # Initialize trainer
