@@ -19,6 +19,7 @@ trainer:
   enable_checkpointing: false
 
 hydra:
+  mode: MULTIRUN
   sweeper:
     params:
       model.name: 'gpt2','openai-community/gpt2-large'
