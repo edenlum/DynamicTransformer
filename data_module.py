@@ -19,7 +19,7 @@ class TextDataset(Dataset):
         begin_loc = idx * self.stride
         end_loc = min(begin_loc + self.block_size, self.seq_len)
         input_ids = self.input_ids[:, begin_loc:end_loc]
-        target_ids = self.input_ids.clone()
+        target_ids = input_ids.clone()
         target_len = end_loc - ((idx - 1) * self.stride + self.block_size) #  this equals to stride except on the last iter
         target_ids[:, :-target_len] = -100  # don't use the overlapping tokens from last iter as target because they were already used
         return {
