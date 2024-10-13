@@ -64,13 +64,6 @@ class GPT2LightningModule(pl.LightningModule):
         attention_mask = batch['attention_mask']
         labels = input_ids.clone()
 
-            # Add print statements
-        print(f"\nBatch Index: {batch_idx}")
-        print(f"Input IDs Shape: {input_ids.shape}")
-        print(f"Attention Mask Shape: {attention_mask.shape}")
-        print(f"Input IDs: {input_ids}")
-        print(f"Attention Mask: {attention_mask}")
-
         outputs = self.model(
             input_ids=input_ids, 
             attention_mask=attention_mask, 
