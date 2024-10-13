@@ -19,7 +19,7 @@ def main(cfg: DictConfig):
 
     # Initialize wandb logger
     wandb_logger = WandbLogger(
-        name=cfg.experiment.name,
+        name=f"{cfg.experiment.name}_model={cfg.model.name}_skip_layer={cfg.model.skip_layer}",
         project=cfg.experiment.project,
         config=filter_config(cfg, irrelevant_keys),
         reinit=True
