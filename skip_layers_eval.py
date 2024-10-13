@@ -21,7 +21,8 @@ def main(cfg: DictConfig):
     wandb_logger = WandbLogger(
         name=cfg.experiment.name,
         project=cfg.experiment.project,
-        config=filter_config(cfg, irrelevant_keys)
+        config=filter_config(cfg, irrelevant_keys),
+        reinit=True
     ) if cfg.trainer.logger else None
 
     # Initialize trainer

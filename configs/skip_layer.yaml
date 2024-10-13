@@ -3,7 +3,7 @@ defaults:
 
 experiment: 
   entity: 'edenlum'
-  name: 'skip_layer'
+  name: '${experiment.name}_model=${model.name}_skip_layer=${model.skip_layer}'
   project: 'skip_layer_gpt2_wikitext'
 
 model:
