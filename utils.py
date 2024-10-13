@@ -1,6 +1,7 @@
 import wandb
 import hashlib
 from omegaconf import OmegaConf
+import logging
 
 
 def check_existing_run(entity_name, project_name, cfg, irrelevant_keys=[]):
@@ -9,6 +10,7 @@ def check_existing_run(entity_name, project_name, cfg, irrelevant_keys=[]):
     try:
         runs = api.runs(f"{entity_name}/{project_name}")
         for run in runs:
+            logging.info(f"Current cfg: {cfg} \nWandB cfg: {filter_config(run.config, irrelevant_keys)}")
             if cfg_hash == get_config_hash(filter_config(run.config, irrelevant_keys)):
                 return True
     except wandb.errors.CommError as e:

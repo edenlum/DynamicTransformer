@@ -24,7 +24,8 @@ def main(cfg: DictConfig):
         name=f"{cfg.experiment.name}_model={cfg.model.name}_skip_layer={cfg.model.skip_layer}",
         entity=cfg.experiment.entity, 
         project=cfg.experiment.project, 
-        config=filter_config(cfg, irrelevant_keys)
+        config=filter_config(cfg, irrelevant_keys),
+        reinit=True
     )
 
     # Initialize wandb logger
