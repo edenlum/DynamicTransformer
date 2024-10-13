@@ -1,6 +1,6 @@
 import wandb
-import json
 import hashlib
+from omegaconf import OmegaConf
 
 
 def check_existing_run(entity_name, project_name, cfg, irrelevant_keys=[]):
@@ -16,9 +16,9 @@ def check_existing_run(entity_name, project_name, cfg, irrelevant_keys=[]):
         return False  # Proceeding despite the error
     return False
 
-def get_config_hash(config):
+def get_config_hash(cfg):
     # Convert the config to a JSON string with consistent key ordering
-    config_str = json.dumps(config, sort_keys=True)
+    config_str = str(OmegaConf.to_yaml(cfg))
     # Compute the MD5 hash of the config string
     config_hash = hashlib.md5(config_str.encode('utf-8')).hexdigest()
     return config_hash
