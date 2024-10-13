@@ -7,9 +7,8 @@ experiment:
   project: 'skip_layer_gpt2_wikitext'
 
 model:
-  name: ['gpt2','openai-community/gpt2-large']
-  skip_layer: range(0, 12)
-
+  name: 'gpt2'
+  skip_layer: 0
 data:
   block_size: 1024
   stride: 512
@@ -22,8 +21,10 @@ trainer:
 hydra:
   sweeper:
     params:
-      model.name: ${model.name}
-      model.skip_layer: ${model.skip_layer}
+      model.name:
+        - 'gpt2'
+        - 'openai-community/gpt2-large'
+      model.skip_layer: range(0,12)
   job:
     env_set:
       TOKENIZERS_PARALLELISM: 'false'
