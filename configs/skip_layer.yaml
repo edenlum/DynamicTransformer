@@ -1,25 +1,31 @@
 defaults:
   - _self_
 
-experiment:
+experiment: 
+  entity: 'edenlum'
   name: 'skip_layer'
   project: 'skip_layer_gpt2_wikitext'
 
 model:
-  name: 'gpt2'
-  skip_layer: null  # Set to an integer to skip a specific layer
+  name:
+    - 'gpt2'
+    - 'openai-community/gpt2-large'
+  skip_layer: range(0, 12)
 
 data:
-  block_size: 1024  # Model's max context length
-  stride: 512       # Overlap between chunks
+  block_size: 1024
+  stride: 512
 
 trainer:
   gpus: 1
   logger: true
   enable_checkpointing: false
 
-
 hydra:
+  sweeper:
+    params:
+      model.name: ${model.name}
+      model.skip_layer: ${model.skip_layer}
   job:
     env_set:
       TOKENIZERS_PARALLELISM: 'false'

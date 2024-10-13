@@ -1,5 +1,3 @@
-# main.py
-
 import hydra
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import Trainer
@@ -7,9 +5,16 @@ from pytorch_lightning.loggers import WandbLogger
 from data_module import WikiTextDataModule
 from model import GPT2LightningModule
 
+from utils import *
+
+
 @hydra.main(config_path='configs', config_name='skip_layer')
 def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
+
+    if check_existing_run(cfg.experiment.entity, cfg.experiment.project, cfg):
+        print("An experiment with this configuration has already been run.")
+        return  # Exit or proceed based on your preference
 
     # Initialize wandb logger
     wandb_logger = WandbLogger(
