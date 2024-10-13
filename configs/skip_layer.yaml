@@ -22,7 +22,7 @@ hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      model.name: 'gpt2','openai-community/gpt2-large'
+      model.name: ['gpt2','openai-community/gpt2-large']
       model.skip_layer: range(0,12)
   job:
     env_set:
