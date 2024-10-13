@@ -8,7 +8,7 @@ from model import GPT2LightningModule
 from utils import *
 
 
-@hydra.main(config_path='configs', config_name='skip_layer', version_base='0.1')
+@hydra.main(config_path='configs', config_name='skip_layer', version_base='1.1')
 def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
