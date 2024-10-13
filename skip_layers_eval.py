@@ -22,11 +22,11 @@ def main(cfg: DictConfig):
     )
     wandb.init(
         name=f"{cfg.experiment.name}_model={cfg.model.name}_skip_layer={cfg.model.skip_layer}",
-        entity=cfg.wandb.entity, 
-        project=cfg.wandb.project, 
+        entity=cfg.experiment.entity, 
+        project=cfg.experiment.project, 
         config=filter_config(cfg, irrelevant_keys)
     )
-    
+
     # Initialize wandb logger
     wandb_logger = WandbLogger(
         project=cfg.experiment.project,
