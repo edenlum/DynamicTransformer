@@ -59,27 +59,17 @@ class GPT2LightningModule(pl.LightningModule):
         self.model.transformer.forward = types.MethodType(custom_forward, self.model.transformer)
 
     def test_step(self, batch, batch_idx):
-        input_ids = batch['input_ids'].squeeze(0).to(self.device)
-        begin_loc = batch['begin_loc'].item()
-        end_loc = batch['end_loc'].item()
-        trg_len = batch['trg_len'].item()
-
-        # Prepare target_ids
-        target_ids = input_ids.clone()
-        target_ids[:-trg_len] = -100  # Only compute loss on new tokens
-
+        input_ids = batch['input_ids']
+        target_ids = batch['target_ids']
         outputs = self.model(input_ids=input_ids, labels=target_ids)
-        neg_log_likelihood = outputs.loss * trg_len
+        neg_log_likelihood = outputs.loss
 
         self.nlls.append(neg_log_likelihood)
 
         return neg_log_likelihood
 
     def on_test_epoch_end(self):
-        # Access test_dataset_size from the data module
-        test_dataset_size = self.trainer.datamodule.test_dataset_size
-        nlls = torch.stack(self.nlls)
-        ppl = torch.exp(nlls.sum() / test_dataset_size)
+        ppl = torch.exp(torch.stack(self.nlls).mean())
         self.log('test_perplexity', ppl)
         print(f'Test Perplexity: {ppl.item():.2f}')
 
