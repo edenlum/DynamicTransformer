@@ -6,6 +6,7 @@ from datasets import load_dataset
 import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from pytorch_lightning.utilities.types import STEP_OUTPUT
+from torch import nn
 
 
 
@@ -25,38 +26,26 @@ class GPT2LightningModule(pl.LightningModule):
         )
 
         if self.skip_layer is not None:
+            print(f"skipping layer {self.skip_layer}")
             self.modify_model(self.skip_layer)
+        else:
+            print("Not skipping any layers")
 
         self.nlls = []
 
 
     def modify_model(self, layer_to_skip):
         # Modify the model to skip a specific layer
-        import types
+        import copy
+        if not isinstance(layers_to_remove, list):
+            layers_to_remove = [layers_to_remove]
+        modified_model = copy.deepcopy(self.model)
+        modified_model.transformer.h = nn.ModuleList(
+            [layer for i, layer in enumerate(modified_model.transformer.h) if i not in layers_to_remove]
+        )
 
-        def custom_forward(self, input_ids=None, attention_mask=None, **kwargs):
-            # Get input embeddings
-            input_shape = input_ids.size()
-            input_embeds = self.wte(input_ids)
-            position_ids = torch.arange(0, input_shape[1], dtype=torch.long, device=input_ids.device)
-            position_embeds = self.wpe(position_ids)
-            hidden_states = input_embeds + position_embeds
+        self.model = modified_model
 
-            # Apply dropout
-            hidden_states = self.drop(hidden_states)
-
-            # Iterate through transformer layers
-            for i, block in enumerate(self.h):
-                if i == layer_to_skip:
-                    continue  # Skip this layer
-                outputs = block(hidden_states, attention_mask=attention_mask, **kwargs)
-                hidden_states = outputs[0]
-
-            hidden_states = self.ln_f(hidden_states)
-            return hidden_states
-
-        # Bind the new forward function to the model's transformer
-        self.model.transformer.forward = types.MethodType(custom_forward, self.model.transformer)
 
     def test_step(self, batch, batch_idx):
         input_ids = batch['input_ids']
