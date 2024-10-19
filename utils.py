@@ -6,7 +6,7 @@ import logging
 
 def check_existing_run(entity_name, project_name, cfg, irrelevant_keys=[]):
     api = wandb.Api()
-    cfg_hash = get_config_hash(filter_config(cfg, irrelevant_keys))
+    cfg_hash = get_config_hash(filter_config(cfg, irrelevant_keys=irrelevant_keys))
     try:
         runs = api.runs(f"{entity_name}/{project_name}")
         for run in runs:
