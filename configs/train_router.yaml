@@ -1,0 +1,32 @@
+defaults:
+  - _self_
+
+experiment:
+  entity: 'edenlum'
+  name: 'train_router'
+  project: 'gpt2_router_training'
+
+model:
+  name: 'openai-community/gpt2-large'
+  block_size: 3
+  iters: 2
+  learning_rate: 0.001
+
+data:
+  block_size: 1024
+  stride: 512
+  batch_size: 8
+
+trainer:
+  devices: 1
+  accelerator: 'gpu'
+  logger: true
+  enable_checkpointing: true
+  max_epochs: 3
+
+torch:
+  precision: 'medium'
+
+hydra:
+  run:
+    dir: ./outputs/train_router

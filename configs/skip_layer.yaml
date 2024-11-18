@@ -7,23 +7,30 @@ experiment:
   project: 'skip_layer_gpt2_wikitext'
 
 model:
-  name: 'gpt2'
-  skip_layer: 0
+  name: 'openai-community/gpt2-large'
+  skip_layer: null
+  swap_layer: 0
+
 data:
   block_size: 1024
   stride: 512
 
 trainer:
-  gpus: 1
+  devices: 1
+  accelerator: 'gpu'
   logger: true
   enable_checkpointing: false
 
+torch:
+  precision: 'medium'
+
 hydra:
-  mode: MULTIRUN
-  sweeper:
-    params:
-      model.name: choice('gpt2','openai-community/gpt2-large')
-      model.skip_layer: range(0,12)
+#  mode: MULTIRUN
+#  sweeper:
+#    params:
+#      model.name: choice('openai-community/gpt2-large')
+#      model.skip_layer: range(5, 6)
   job:
     env_set:
       TOKENIZERS_PARALLELISM: 'false'
+

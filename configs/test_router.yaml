@@ -1,0 +1,32 @@
+defaults:
+  - _self_
+
+experiment:
+  entity: 'edenlum'
+  name: 'train_router'
+  project: 'gpt2_router_training'
+
+model:
+  checkpoint_path: "/home/fodl/edenlumbroso/DynamicTransformer/outputs/train_router/gpt2_router_training/nopei4ni/checkpoints/epoch=2-step=1779.ckpt"
+  name: 'openai-community/gpt2-large'
+  block_size: 2
+  iters: 1
+
+data:
+  block_size: 1024
+  stride: 1
+  batch_size: 8
+
+trainer:
+  devices: 1
+  accelerator: 'gpu'
+  logger: true
+  enable_checkpointing: true
+  max_epochs: 3
+
+torch:
+  precision: 'medium'
+
+hydra:
+  run:
+    dir: ./outputs/train_router
